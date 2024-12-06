@@ -5,7 +5,7 @@
  * Group #1
  * 1 - 5026231008 - Batara Haryo Yudanto
  * 2 - 5026231079 - Kevin Nathanael
- * 3 - 5026231089 - SYusuf Acala Sadurjaya Sri Krisna
+ * 3 - 5026231089 - Yusuf Acala Sadurjaya Sri Krisna
  */
 
 import java.awt.Color;

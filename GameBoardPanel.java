@@ -5,7 +5,7 @@
  * Group #1
  * 1 - 5026231008 - Batara Haryo Yudanto
  * 2 - 5026231079 - Kevin Nathanael
- * 3 - 5026231089 - SYusuf Acala Sadurjaya Sri Krisna
+ * 3 - 5026231089 - Yusuf Acala Sadurjaya Sri Krisna
  */
 
 import java.awt.*;
@@ -103,10 +103,19 @@ public class GameBoardPanel extends JPanel {
              * Update the cell status sourceCell.status,
              * and re-paint the cell via sourceCell.paint().
              */
+
+
+
             if (numberIn == sourceCell.number) {
                 sourceCell.status = CellStatus.CORRECT_GUESS;
+                String effectFile = "Correct.wav";
+                SoundEffect effect = new SoundEffect();
+                effect.playSound(effectFile);
             } else {
                 sourceCell.status = CellStatus.WRONG_GUESS;
+                String effectFile = "False.wav";
+                SoundEffect effect = new SoundEffect();
+                effect.playSound(effectFile);
             }
             sourceCell.paint();   // re-paint this cell based on its status
 
