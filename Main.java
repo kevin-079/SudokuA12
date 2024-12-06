@@ -69,6 +69,11 @@ public class Main extends JFrame {
         });
 
         setVisible(true);
+
+        // Play Back Ground Music
+        String BGMFile = "BGM.wav";
+        BGM background = new BGM();
+        background.BGMusic(BGMFile);
     }
 
     private JMenuBar createMenuBar() {
