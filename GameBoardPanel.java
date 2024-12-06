@@ -133,8 +133,14 @@ public class GameBoardPanel extends JPanel {
             // Check if the entered number is correct
             if (numberIn == sourceCell.number) {
                 sourceCell.status = CellStatus.CORRECT_GUESS;
+                String effectFile = "Correct.wav";
+                SoundEffect effect = new SoundEffect();
+                effect.playSound(effectFile);
             } else {
                 sourceCell.status = CellStatus.WRONG_GUESS;
+                String effectFile = "False.wav";
+                SoundEffect effect = new SoundEffect();
+                effect.playSound(effectFile);
             }
 
             // Repaint the cell based on its status
