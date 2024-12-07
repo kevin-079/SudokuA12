@@ -18,15 +18,63 @@ public class Main extends JFrame {
     private JTextField statusBar;
     private Timer timer;
     private int secondsElapsed;
+    private int currentScore;
     private JProgressBar progressBar;
+    private String playerName = "Player";  // Default name
+    private int highScore = Integer.MAX_VALUE;  // Store the highest score
+
+    private JPanel welcomePanel;  // Panel for Welcome Screen
 
     public Main() {
         setTitle("Sudoku");
-        setSize(600, 700); // Menambahkan ruang untuk status bar dan progress bar
+        setSize(600, 700);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // Game board panel
+        // Panel for Welcome Screen
+        welcomePanel = new JPanel();
+        welcomePanel.setLayout(new BorderLayout());
+        welcomePanel.setBackground(Color.CYAN);
+
+        // Add Welcome Message
+        JLabel welcomeLabel = new JLabel("Welcome to Sudoku!", JLabel.CENTER);
+        welcomeLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        welcomeLabel.setForeground(Color.WHITE);
+        welcomePanel.add(welcomeLabel, BorderLayout.CENTER);
+
+        // Add Start Game Button
+        JButton startButton = new JButton("Start Game");
+        startButton.setFont(new Font("Arial", Font.PLAIN, 18));
+        startButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                showGameScreen();
+            }
+        });
+        welcomePanel.add(startButton, BorderLayout.SOUTH);
+
+        // Add Exit Button
+        JButton exitButton = new JButton("Exit");
+        exitButton.setFont(new Font("Arial", Font.PLAIN, 18));
+        exitButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.exit(0);  // Exit the game
+            }
+        });
+        welcomePanel.add(exitButton, BorderLayout.NORTH);
+
+        // Display Welcome Screen
+        add(welcomePanel);
+
+        setVisible(true);
+    }
+
+    private void showGameScreen() {
+        // Remove the welcome screen
+        remove(welcomePanel);
+
+        // Initialize the game board
         gameBoardPanel = new GameBoardPanel();
         add(gameBoardPanel, BorderLayout.CENTER);
 
@@ -46,7 +94,7 @@ public class Main extends JFrame {
         add(statusBar, BorderLayout.SOUTH);
 
         // Progress Bar (for remaining cells)
-        progressBar = new JProgressBar(0, 81); // 81 cells in a Sudoku board
+        progressBar = new JProgressBar(0, 81); 
         progressBar.setStringPainted(true);
         add(progressBar, BorderLayout.SOUTH);
 
@@ -68,12 +116,49 @@ public class Main extends JFrame {
             }
         });
 
+        // Make the game screen visible
         setVisible(true);
 
-        // Play Back Ground Music
+        // Play Background Music
         String BGMFile = "BGM.wav";
         BGM background = new BGM();
         background.BGMusic(BGMFile);
+    }
+
+    private void startNewGame() {
+        // Prompt for player name
+        playerName = JOptionPane.showInputDialog(this, "Enter your name:", "New Game", JOptionPane.QUESTION_MESSAGE);
+        if (playerName == null || playerName.trim().isEmpty()) {
+            playerName = "Player";  // Default name if player doesn't enter anything
+        }
+
+        gameBoardPanel.newGame();  // Reset board to a new game
+        secondsElapsed = 0;  // Reset timer
+        currentScore = 0;  // Reset current score
+        timer.start();
+        statusBar.setText("Welcome " + playerName + "!");
+        updateStatusBar();
+    }
+
+    private void updateStatusBar() {
+        int remainingCells = gameBoardPanel.getRemainingCells(); // Get the remaining empty cells
+        progressBar.setValue(81 - remainingCells); // Update progress bar
+        statusBar.setText("Time: " + secondsElapsed + " seconds | Remaining Cells: " + remainingCells +
+                " | High Score: " + highScore + " seconds | Player: " + playerName);
+    }
+
+    private void checkAndUpdateHighScore() {
+        if (gameBoardPanel.isSolved() && secondsElapsed < highScore) {
+            highScore = secondsElapsed;  // Update high score
+            JOptionPane.showMessageDialog(this, "Congratulations " + playerName + "! New high score: " + highScore + " seconds");
+        }
+    }
+
+    private void checkGameCompletion() {
+        if (gameBoardPanel.isSolved()) {
+            checkAndUpdateHighScore();
+            JOptionPane.showMessageDialog(null, "Congratulations, you solved the puzzle!");
+        }
     }
 
     private JMenuBar createMenuBar() {
@@ -111,34 +196,18 @@ public class Main extends JFrame {
         return menuBar;
     }
 
-    private void startNewGame() {
-        gameBoardPanel.newGame(); // Reset board to a new game
-        secondsElapsed = 0; // Reset timer
-        timer.start();
-        statusBar.setText("New game started!");
-        updateStatusBar();
-    }
-
     private void resetGame() {
-        gameBoardPanel.resetGame(); // Reset game board
-        secondsElapsed = 0; // Reset timer
-        statusBar.setText("Game reset!");
+        gameBoardPanel.reset();  // Reset the board
+        secondsElapsed = 0;  // Reset timer
+        currentScore = 0;  // Reset current score
         updateStatusBar();
-    }
-
-    private void updateStatusBar() {
-        int remainingCells = gameBoardPanel.getRemainingCells(); // Get the remaining empty cells
-        progressBar.setValue(81 - remainingCells); // Update progress bar
-        statusBar.setText("Time: " + secondsElapsed + " seconds | Remaining Cells: " + remainingCells);
     }
 
     private void toggleTimer() {
         if (timer.isRunning()) {
             timer.stop();
-            statusBar.setText("Game paused.");
         } else {
             timer.start();
-            statusBar.setText("Game resumed.");
         }
     }
 
