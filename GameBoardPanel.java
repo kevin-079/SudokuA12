@@ -122,6 +122,24 @@ public class GameBoardPanel extends JPanel {
         return true;
     }
 
+    //Hints
+    public void RevealOne() {
+        for (int row = 0; row < GRID_SIZE; ++row) {
+            for (int col = 0; col < GRID_SIZE; ++col) {
+                if(puzzle.isGiven[row][col] == false) {
+                    puzzle.isGiven[row][col] = true;
+                    cells[row][col].setText(puzzle.numbers[row][col] + "");
+                    cells[row][col].setEditable(false);
+                    cells[row][col].setBackground(new Color(207, 207, 196));
+                    cells[row][col].setForeground(Color.BLACK);
+
+                    return;
+                }
+
+            }
+        }
+    }
+
     // Listener for editable cells
     private class CellInputListener implements ActionListener {
         @Override
@@ -129,6 +147,7 @@ public class GameBoardPanel extends JPanel {
             // Get the cell that triggered the event
             Cell sourceCell = (Cell) e.getSource();
             int numberIn = Integer.parseInt(sourceCell.getText());
+            System.out.println("Angka yg kamu masukin: " +numberIn);
 
             // Check if the entered number is correct
             if (numberIn == sourceCell.number) {
@@ -148,7 +167,17 @@ public class GameBoardPanel extends JPanel {
 
             // Check if the game is solved
             if (isSolved()) {
-                JOptionPane.showMessageDialog(null, "Congratulations! You solved the puzzle.");
+                JLabel label = new JLabel();
+                label.setText("Congratulations!");
+                label.setHorizontalTextPosition(JLabel.CENTER);
+                label.setVerticalTextPosition(JLabel.TOP);
+                label.setFont(new Font("MV Boli", Font.BOLD, 35));
+
+                label.setIconTextGap(25);
+                label.setBackground(Color.yellow);
+                label.setVerticalAlignment(JLabel.CENTER);
+                label.setHorizontalAlignment(JLabel.CENTER);
+                JOptionPane.showMessageDialog(null, "Congrats Bro! Kamu kerenn.");
                 timer.stop();  // Stop the timer when the puzzle is solved
             }
         }
