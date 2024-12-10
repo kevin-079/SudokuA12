@@ -64,6 +64,18 @@ public class Main extends JFrame {
         });
         welcomePanel.add(exitButton, BorderLayout.NORTH);
 
+        JButton hintButton = new JButton("Hint");
+        hintButton.setFont(new Font("Arial", Font.PLAIN, 18));
+        hintButton.add(hintButton);
+        hintButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                showGameScreen();
+            }
+
+        });
+        welcomePanel.add(hintButton, BorderLayout.SOUTH);
+
         // Display Welcome Screen
         add(welcomePanel);
 
@@ -82,9 +94,11 @@ public class Main extends JFrame {
         JPanel controlPanel = new JPanel();
         JButton newGameButton = new JButton("New Game");
         JButton resetButton = new JButton("Reset");
+        JButton hintButton = new JButton("Hint");
 
         controlPanel.add(newGameButton);
         controlPanel.add(resetButton);
+        controlPanel.add(hintButton);
         add(controlPanel, BorderLayout.NORTH);
 
         // Status bar
@@ -103,6 +117,9 @@ public class Main extends JFrame {
 
         // Action listener for Reset button
         resetButton.addActionListener(e -> resetGame());
+
+        //Action listener for hint Button
+        hint.Button.addActionListener(e -> RevealOne());
 
         // Create Menu Bar
         setJMenuBar(createMenuBar());
