@@ -41,7 +41,7 @@ public class GameBoardPanel extends JPanel {
                         (col % 3 == 0) ? 4 : 1,
                         (row == SudokuConstants.GRID_SIZE - 1) ? 4 : 1,
                         (col == SudokuConstants.GRID_SIZE - 1) ? 4 : 1,
-                        Color.BLACK
+                        Color.WHITE
                 ));
                 cells[row][col].setBackground(new Color(30, 30, 60)); // Atur backgorund cellnya jadi dark blue
                 cells[row][col].setForeground(Color.WHITE); // Atur angkanya berwarna cerah
