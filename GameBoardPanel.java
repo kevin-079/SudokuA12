@@ -8,184 +8,189 @@
  * 3 - 5026231089 - Yusuf Acala Sadurjaya Sri Krisna
  */
 
-import java.awt.*;
-import java.awt.event.*;
 import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
 
 public class GameBoardPanel extends JPanel {
-    private static final long serialVersionUID = 1L;  // To prevent serial warning
+    private Cell[][] cells = new Cell[SudokuConstants.GRID_SIZE][SudokuConstants.GRID_SIZE];
+    private Puzzle puzzle = new Puzzle();
+    private Timer timer;
+    private int remainingCells;
+    private Clip backgroundMusic;
 
-    // Define named constants for UI sizes
-    public static final int CELL_SIZE = 60;   // Cell width/height in pixels
-    public static final int BOARD_WIDTH  = CELL_SIZE * SudokuConstants.GRID_SIZE;
-    public static final int BOARD_HEIGHT = CELL_SIZE * SudokuConstants.GRID_SIZE;  // Board width/height in pixels
-
-    // Define properties
-    private Cell[][] cells = new Cell[SudokuConstants.GRID_SIZE][SudokuConstants.GRID_SIZE];  // The 9x9 cells
-    private Puzzle puzzle = new Puzzle();  // Puzzle data
-    private JTextField statusBar;  // Status bar to show messages
-    private Timer timer;  // Timer to track game time
-    private int secondsElapsed = 0;  // Time tracker
-    private JProgressBar progressBar;  // Progress bar to show game progress
-
-    // Constructor
     public GameBoardPanel() {
-        super.setLayout(new GridLayout(SudokuConstants.GRID_SIZE, SudokuConstants.GRID_SIZE));  // JPanel
+        setLayout(new GridLayout(SudokuConstants.GRID_SIZE, SudokuConstants.GRID_SIZE));
 
-        // Allocate the 2D array of Cell, and add into JPanel
+        Font customFont = new Font("Comic Sans MS", Font.BOLD, 24); // Ubah angkanya agar enak dilihat
+
+        playBackgroundMusic("play.wav");
+
         for (int row = 0; row < SudokuConstants.GRID_SIZE; ++row) {
             for (int col = 0; col < SudokuConstants.GRID_SIZE; ++col) {
                 cells[row][col] = new Cell(row, col);
-                super.add(cells[row][col]);   // JPanel
+                cells[row][col].setFont(customFont); // Gunakan di setiap pemakaian
+                cells[row][col].addActionListener(new CellInputListener(row, col));
+                cells[row][col].setBorder(BorderFactory.createMatteBorder(
+                        (row % 3 == 0) ? 4 : 1,
+                        (col % 3 == 0) ? 4 : 1,
+                        (row == SudokuConstants.GRID_SIZE - 1) ? 4 : 1,
+                        (col == SudokuConstants.GRID_SIZE - 1) ? 4 : 1,
+                        Color.BLACK
+                ));
+                cells[row][col].setBackground(new Color(30, 30, 60)); // Atur backgorund cellnya jadi dark blue
+                cells[row][col].setForeground(Color.WHITE); // Atur angkanya berwarna cerah
+                add(cells[row][col]);
             }
         }
-
-        // Add action listeners for editable cells
-        CellInputListener listener = new CellInputListener();
-        for (int row = 0; row < SudokuConstants.GRID_SIZE; ++row) {
-            for (int col = 0; col < SudokuConstants.GRID_SIZE; ++col) {
-                if (cells[row][col].isEditable()) {
-                    cells[row][col].addActionListener(listener);
-                }
-            }
-        }
-        
-        super.setPreferredSize(new Dimension(BOARD_WIDTH, BOARD_HEIGHT));
-
-        // Initialize status bar and progress bar
-        statusBar = new JTextField("Welcome to Sudoku!");
-        statusBar.setEditable(false);
-        statusBar.setBackground(Color.LIGHT_GRAY);
-        add(statusBar, BorderLayout.SOUTH);
-
-        progressBar = new JProgressBar(0, 81);  // 81 cells in Sudoku
-        progressBar.setStringPainted(true);
-        add(progressBar, BorderLayout.SOUTH);
-
-        // Initialize Timer
-        timer = new Timer(1000, e -> {
-            secondsElapsed++;
-            updateStatusBar();
-        });
-
-        timer.start();  // Start the timer immediately
     }
 
-    // Generate a new puzzle; reset the game board of cells based on the puzzle
-    public void newGame() {
-        puzzle.newPuzzle(2);  // Generate new puzzle with difficulty level 2
-
-        // Initialize all the 9x9 cells based on the puzzle
+    public void newGame(int cellsToGuess) {
+        puzzle.newPuzzle(cellsToGuess);
+        remainingCells = cellsToGuess;
         for (int row = 0; row < SudokuConstants.GRID_SIZE; ++row) {
             for (int col = 0; col < SudokuConstants.GRID_SIZE; ++col) {
                 cells[row][col].newGame(puzzle.numbers[row][col], puzzle.isGiven[row][col]);
-            }
-        }
-
-        // Reset timer and progress bar
-        secondsElapsed = 0;
-        progressBar.setValue(0);
-        statusBar.setText("New game started!");
-    }
-
-    // Update status bar with the current status (time, score, and remaining cells)
-    private void updateStatusBar() {
-        int remainingCells = getRemainingCells();
-        int filledCells = 81 - remainingCells;
-        progressBar.setValue(filledCells);
-
-        statusBar.setText("Time: " + secondsElapsed + " seconds | Remaining Cells: " + remainingCells);
-    }
-
-    // Get the number of remaining cells (empty cells)
-    private int getRemainingCells() {
-        int remaining = 0;
-        for (int row = 0; row < SudokuConstants.GRID_SIZE; ++row) {
-            for (int col = 0; col < SudokuConstants.GRID_SIZE; ++col) {
-                if (cells[row][col].getText().equals("")) {
-                    remaining++;
+                if (puzzle.isGiven[row][col]) {
+                    cells[row][col].setBackground(new Color(50, 50, 90)); // Beri warna berbeda pada cell yang harus diisi
+                    cells[row][col].setForeground(Color.WHITE);
+                } else {
+                    cells[row][col].setBackground(new Color(30, 30, 60)); // Warna berbeda pada cell yang telah terisi
+                    cells[row][col].setForeground(Color.WHITE);
                 }
             }
         }
-        return remaining;
     }
 
-    // Check if the puzzle is solved
-    public boolean isSolved() {
+    public void revealHint() {
         for (int row = 0; row < SudokuConstants.GRID_SIZE; ++row) {
             for (int col = 0; col < SudokuConstants.GRID_SIZE; ++col) {
-                if (cells[row][col].status == CellStatus.TO_GUESS || cells[row][col].status == CellStatus.WRONG_GUESS) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    //Hints
-    public void RevealOne() {
-        for (int row = 0; row < GRID_SIZE; ++row) {
-            for (int col = 0; col < GRID_SIZE; ++col) {
-                if(puzzle.isGiven[row][col] == false) {
-                    puzzle.isGiven[row][col] = true;
-                    cells[row][col].setText(puzzle.numbers[row][col] + "");
-                    cells[row][col].setEditable(false);
-                    cells[row][col].setBackground(new Color(207, 207, 196));
-                    cells[row][col].setForeground(Color.BLACK);
-
+                if (!puzzle.isGiven[row][col] && cells[row][col].getText().isEmpty()) {
+                    final int finalRow = row;
+                    final int finalCol = col;
+                    cells[finalRow][finalCol].setText(String.valueOf(puzzle.numbers[finalRow][finalCol]));
+                    cells[finalRow][finalCol].setEditable(false);
+                    cells[finalRow][finalCol].setBackground(Color.GREEN);
+                    Timer timer = new Timer(200, e -> cells[finalRow][finalCol].setBackground(new Color(30, 30, 60)));
+                    timer.setRepeats(false);
+                    timer.start();
                     return;
                 }
-
             }
         }
     }
 
-    // Listener for editable cells
+    private void checkWinCondition() {
+        boolean allCellsCorrect = true;
+        for (int row = 0; row < SudokuConstants.GRID_SIZE; ++row) {
+            for (int col = 0; col < SudokuConstants.GRID_SIZE; ++col) {
+                String cellText = cells[row][col].getText();
+                if (cellText.isEmpty() || !cellText.equals(String.valueOf(puzzle.numbers[row][col]))) {
+                    allCellsCorrect = false;
+                    break;
+                }
+            }
+            if (!allCellsCorrect) break;
+        }
+
+        if (allCellsCorrect) {
+            stopBackgroundMusic();
+            playSound("win.wav");
+            JOptionPane.showMessageDialog(this, "Congratulations! You win!", "Game Over", JOptionPane.INFORMATION_MESSAGE);
+            int option = JOptionPane.showOptionDialog(this, "Main lagi atau Exit?", "Selamat Anda Menang!",
+                    JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, new String[]{"Main Lagi", "Keluar"}, "Main Lagi");
+            if (option == JOptionPane.YES_OPTION) {
+                ((JFrame) SwingUtilities.getWindowAncestor(this)).dispose();
+                new Main(); // Jika selesai maka kembali ke awal
+            } else {
+                System.exit(0);
+            }
+        }
+    }
+
+    public void handleTimesUp() {
+        stopBackgroundMusic();
+        JOptionPane.showMessageDialog(this, "Time's up! You lose.", "Game Over", JOptionPane.INFORMATION_MESSAGE);
+        int option = JOptionPane.showOptionDialog(this, "Coba lagi atau Keluar?", "Waktu Habis!",
+                JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, new String[]{"Coba Lagi", "Keluar"}, "Coba Lagi");
+        if (option == JOptionPane.YES_OPTION) {
+            ((JFrame) SwingUtilities.getWindowAncestor(this)).dispose();
+            new Main(); // Kembali ke pilih level
+        } else {
+            System.exit(0);
+        }
+    }
+
+    private void playSound(String soundFile) {
+        try {
+            File file = new File(soundFile);
+            AudioInputStream audioInput = AudioSystem.getAudioInputStream(file);
+            Clip clip = AudioSystem.getClip();
+            clip.open(audioInput);
+            clip.start();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void playBackgroundMusic(String soundFile) {
+        try {
+            File file = new File(soundFile);
+            AudioInputStream audioInput = AudioSystem.getAudioInputStream(file);
+            backgroundMusic = AudioSystem.getClip();
+            backgroundMusic.open(audioInput);
+            backgroundMusic.loop(Clip.LOOP_CONTINUOUSLY);
+            backgroundMusic.start();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void stopBackgroundMusic() {
+        if (backgroundMusic != null && backgroundMusic.isRunning()) {
+            backgroundMusic.stop();
+            backgroundMusic.close();
+        }
+    }
+
     private class CellInputListener implements ActionListener {
+        private final int row;
+        private final int col;
+
+        public CellInputListener(int row, int col) {
+            this.row = row;
+            this.col = col;
+        }
+
         @Override
         public void actionPerformed(ActionEvent e) {
-            // Get the cell that triggered the event
-            Cell sourceCell = (Cell) e.getSource();
-            int numberIn = Integer.parseInt(sourceCell.getText());
-            System.out.println("Angka yg kamu masukin: " +numberIn);
-
-            // Check if the entered number is correct
-            if (numberIn == sourceCell.number) {
-                sourceCell.status = CellStatus.CORRECT_GUESS;
-                String effectFile = "Correct.wav";
-                SoundEffect effect = new SoundEffect();
-                effect.playSound(effectFile);
-            } else {
-                sourceCell.status = CellStatus.WRONG_GUESS;
-                String effectFile = "False.wav";
-                SoundEffect effect = new SoundEffect();
-                effect.playSound(effectFile);
-            }
-
-            // Repaint the cell based on its status
-            sourceCell.paint();
-
-            // Check if the game is solved
-            if (isSolved()) {
-                JLabel label = new JLabel();
-                label.setText("Congratulations!");
-                label.setHorizontalTextPosition(JLabel.CENTER);
-                label.setVerticalTextPosition(JLabel.TOP);
-                label.setFont(new Font("MV Boli", Font.BOLD, 35));
-
-                label.setIconTextGap(25);
-                label.setBackground(Color.yellow);
-                label.setVerticalAlignment(JLabel.CENTER);
-                label.setHorizontalAlignment(JLabel.CENTER);
-                JOptionPane.showMessageDialog(null, "Congrats Bro! Kamu kerenn.");
-                timer.stop();  // Stop the timer when the puzzle is solved
+            JTextField source = (JTextField) e.getSource();
+            try {
+                int enteredValue = Integer.parseInt(source.getText());
+                if (enteredValue == puzzle.numbers[row][col]) {
+                    playSound("correct.wav");
+                    cells[row][col].setBackground(Color.GREEN);
+                    remainingCells--;
+                } else {
+                    playSound("false.wav");
+                    cells[row][col].setBackground(Color.RED);
+                }
+                Timer timer = new Timer(200, ev -> cells[row][col].setBackground(new Color(30, 30, 60)));
+                timer.setRepeats(false);
+                timer.start();
+                checkWinCondition();
+            } catch (NumberFormatException ex) {
+                playSound("false.wav");
+                cells[row][col].setBackground(Color.RED);
+                Timer timer = new Timer(200, ev -> cells[row][col].setBackground(new Color(30, 30, 60)));
+                timer.setRepeats(false);
+                timer.start();
             }
         }
-    }
-
-    // Reset the game and start a new game
-    public void resetGame() {
-        newGame();  // Start a new game
-        timer.restart();  // Restart the timer
     }
 }
